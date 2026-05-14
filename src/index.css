@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-neon-green: #00FF41;
+  --color-neon-cyan: #00FFFF;
+  --color-neon-pink: #FF00FF;
+  --color-neon-orange: #FF9900;
+  --color-dark-bg: #050505;
+  --color-dark-card: #111111;
+  --color-dark-border: #222222;
+  --color-dark-text: #E0E0E0;
+  --color-dark-muted: #888888;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-dark-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-cyan);
+}
+
+/* Neon Glow Effects */
+.neon-border {
+  border: 1px solid var(--color-neon-cyan);
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+}
+.neon-text {
+  color: var(--color-neon-cyan);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+}
+.neon-text-orange {
+  color: var(--color-neon-orange);
+  text-shadow: 0 0 8px rgba(255, 153, 0, 0.4);
+}
+.neon-green-text {
+  color: var(--color-neon-green);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+}
+.neon-pink-text {
+  color: var(--color-neon-pink);
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+}
+.neon-button {
+  background-color: transparent;
+  border: 1px solid var(--color-neon-cyan);
+  color: var(--color-neon-cyan);
+  transition: all 0.2s ease;
+}
+.neon-button:hover {
+  background-color: var(--color-neon-cyan);
+  color: var(--color-dark-bg);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+.neon-button-green {
+  background-color: transparent;
+  border: 1px solid var(--color-neon-green);
+  color: var(--color-neon-green);
+  transition: all 0.2s ease;
+}
+.neon-button-green:hover {
+  background-color: var(--color-neon-green);
+  color: var(--color-dark-bg);
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+}
+.neon-button-pink {
+  background-color: transparent;
+  border: 1px solid var(--color-neon-pink);
+  color: var(--color-neon-pink);
+  transition: all 0.2s ease;
+}
+.neon-button-pink:hover {
+  background-color: var(--color-neon-pink);
+  color: var(--color-dark-bg);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+}
+
+/* Dark Inputs */
+.dark-input {
+  background-color: var(--color-dark-bg);
+  border: 1px solid var(--color-dark-border);
+  color: var(--color-dark-text);
+}
+.dark-input:focus {
+  border-color: var(--color-neon-cyan);
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+}
+
+/* Table styles */
+.dark-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dark-table {
+  width: 100%;
+  min-width: 800px; /* Force scroll on mobile for complex tables */
+}
+.dark-table th {
+  background-color: var(--color-dark-border);
+  color: var(--color-dark-muted);
+  border-bottom: 1px solid var(--color-dark-border);
+}
+.dark-table td {
+  border-bottom: 1px solid var(--color-dark-border);
+}
+.dark-table tr:hover td {
+  background-color: rgba(0, 255, 255, 0.05);
+}
+
+/* Mobile Tab Scroll */
+.tab-scroll {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+.tab-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Responsive Grid Adjustments */
+@media (max-width: 640px) {
+  .mobile-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-padding {
+    padding: 1rem !important;
+  }
+}
