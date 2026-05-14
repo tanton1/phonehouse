@@ -213,22 +213,35 @@ export default function BanHang() {
 
     dispatch({ type: 'ADD_ORDER', payload: newOrder });
 
-    // 2. Update Devices
-    cart.filter(c => c.type === 'DEVICE' && c.deviceObj).forEach(c => {
-      const device = c.deviceObj;
-      if (!device) return;
-      dispatch({
-        type: 'UPDATE_DEVICE',
-        payload: {
-          ...device,
-          status: 'DA_BAN',
-          location: 'DA_BAN',
-          sellPrice: c.cartPrice, // Update actual sell price
-          sellDate: now,
-          customerInfo: `${customerName} - ${customerPhone}`,
-          notes: `${device.notes || ''}\n[BÁN HÀNG]: Đơn hàng ${orderId}`
+    // 2. Update Devices & Parts
+    cart.forEach(c => {
+      if (c.type === 'DEVICE' && c.deviceObj) {
+        const device = c.deviceObj;
+        dispatch({
+          type: 'UPDATE_DEVICE',
+          payload: {
+            ...device,
+            status: 'DA_BAN',
+            location: 'DA_BAN',
+            sellPrice: c.cartPrice,
+            sellDate: now,
+            customerInfo: `${customerName} - ${customerPhone}`,
+            notes: `${device.notes || ''}\n[BÁN HÀNG]: Đơn hàng ${orderId}`
+          }
+        });
+      } else if (c.type === 'PART') {
+        // Decrease part stock
+        const part = state.parts.find(p => p.id === c.id);
+        if (part) {
+          dispatch({
+            type: 'UPDATE_PART',
+            payload: {
+              ...part,
+              stock: Math.max(0, part.stock - c.quantity)
+            }
+          });
         }
-      });
+      }
     });
 
     // 3. Create Transaction (Income) for the paid amount

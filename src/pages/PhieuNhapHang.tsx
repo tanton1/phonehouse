@@ -113,6 +113,13 @@ export default function PhieuNhapHang() {
       
       // Delete the receipt
       dispatch({ type: "DELETE_IMPORT_RECEIPT", payload: receipt.id });
+
+      // Delete related transactions
+      const relatedTxns = state.transactions.filter(tx => tx.referenceId === receipt.id);
+      relatedTxns.forEach(tx => {
+        dispatch({ type: "DELETE_TRANSACTION", payload: tx.id });
+      });
+
       alert("Đã xoá phiếu nhập và các máy liên quan.");
     }
   };

@@ -141,110 +141,170 @@ export default function TiepNhan() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    const [paidAmount, setPaidAmount] = useState<number>(0);
     
-    const receptionType = activeTab === 'IMPORT' ? 'IMPORT' :
-                         activeTab === 'SHOP' ? 'SHOP_TRANSFER' : 
-                         activeTab === 'WARRANTY' ? 'WARRANTY' : 
-                         activeTab === 'TRADE_IN' ? 'TRADE_IN' : 'SERVICE';
-    
-    const status: DeviceStatus = activeTab === 'SERVICE' ? 'CHO_PHAN_TASK' : 
-                                activeTab === 'TRADE_IN' ? 'TRADE_IN' : 'CHO_TEST';
+    // Calculate total dynamically when importPrice or imeiList changes
+    const calculatedTotal = (Number(formData.importPrice) || 0) * imeiList.length;
 
-    if (imeiList.length === 0) {
-      return alert("Vui lòng nhập ít nhất 1 IMEI");
-    }
-
-    const importItems: any[] = [];
-    let totalAmount = 0;
-
-    imeiList.forEach(item => {
-      const importPrice = activeTab === 'TRADE_IN' || activeTab === 'IMPORT' ? Number(formData.importPrice) || 0 : foundDevice?.importPrice || 0;
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
       
-      const sourceName = activeTab === 'IMPORT' ? formData.source || "" : 
-                         activeTab === 'SHOP' ? `Nguồn shop chuyển lên - ${formData.source}` :
-                         activeTab === 'TRADE_IN' ? "Nguồn thu cũ" : 
-                         activeTab === 'WARRANTY' ? "Nguồn bảo hành" : "Nguồn khách lẻ";
+      const receptionType = activeTab === 'IMPORT' ? 'IMPORT' :
+                           activeTab === 'SHOP' ? 'SHOP_TRANSFER' : 
+                           activeTab === 'WARRANTY' ? 'WARRANTY' : 
+                           activeTab === 'TRADE_IN' ? 'TRADE_IN' : 'SERVICE';
+      
+      const status: DeviceStatus = activeTab === 'SERVICE' ? 'CHO_PHAN_TASK' : 
+                                  activeTab === 'TRADE_IN' ? 'TRADE_IN' : 'CHO_TEST';
 
-      const newDevice: Device = {
-        id: `dev-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        imei: item.imei,
-        model: formData.model || "",
-        color: formData.color || "",
-        capacity: formData.capacity || "",
-        source: sourceName,
-        importPrice,
-        importDate: foundDevice?.importDate || format(new Date(), "yyyy-MM-dd HH:mm"),
-        receiverId: state.currentUser!.id,
-        status,
-        notes: formData.notes || "",
-        images: item.images,
-        receptionType,
-        customerInfo: formData.customerInfo,
-        customerPhone: formData.customerPhone,
-        receptionDate: format(new Date(), "yyyy-MM-dd HH:mm"),
-      };
-
-      dispatch({ type: "ADD_DEVICE", payload: newDevice });
-
-      importItems.push({
-        imei: item.imei,
-        model: formData.model || "",
-        color: formData.color || "",
-        capacity: formData.capacity || "",
-        importPrice,
-      });
-      totalAmount += importPrice;
-    });
-
-    if (importItems.length > 0) {
-      const sourceName = activeTab === 'IMPORT' ? formData.source || "Không rõ" : 
-                         activeTab === 'SHOP' ? `Nguồn shop chuyển lên - ${formData.source}` :
-                         activeTab === 'TRADE_IN' ? "Nguồn thu cũ" : 
-                         activeTab === 'WARRANTY' ? "Nguồn bảo hành" : "Nguồn khách lẻ";
-
-      if (isEditing && editingReceiptId) {
-        // Update existing receipt
-        const updatedReceipt = {
-          id: editingReceiptId,
-          supplierName: sourceName,
-          importDate: format(new Date(), "yyyy-MM-dd HH:mm"), // Keep original date or update? Updating for now.
-          totalAmount,
-          notes: formData.notes || "",
-          items: importItems,
-          receiverId: state.currentUser!.id,
-        };
-        dispatch({ type: "UPDATE_IMPORT_RECEIPT", payload: updatedReceipt });
-      } else {
-        // Create new receipt
-        const newImportReceipt = {
-          id: `ir-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          supplierName: sourceName,
-          importDate: format(new Date(), "yyyy-MM-dd HH:mm"),
-          totalAmount,
-          notes: formData.notes || "",
-          items: importItems,
-          receiverId: state.currentUser!.id,
-        };
-        dispatch({ type: "ADD_IMPORT_RECEIPT", payload: newImportReceipt });
+      if (imeiList.length === 0) {
+        return alert("Vui lòng nhập ít nhất 1 IMEI");
       }
-    }
 
-    // Reset form
-    setFormData({ model: "", color: "", capacity: "", source: "", notes: "", customerInfo: "", customerPhone: "", importPrice: 0 });
-    setFoundDevice(null);
-    setSearchImei("");
-    setImeiList([]);
-    setCurrentImei("");
-    setIsEditing(false);
-    setEditingReceiptId(null);
-    alert(isEditing ? "Cập nhật phiếu nhập thành công!" : "Tiếp nhận thành công!");
-    
-    if (activeTab === 'IMPORT') {
-      navigate('/phieu-nhap-hang');
-    }
-  };
+      if (paidAmount > calculatedTotal) {
+        return alert("Số tiền thanh toán không được vượt quá tổng tiền nhập!");
+      }
+
+      const importItems: any[] = [];
+      let totalAmount = 0;
+
+      const importReceiptId = isEditing && editingReceiptId ? editingReceiptId : `ir-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      imeiList.forEach(item => {
+        const importPrice = activeTab === 'TRADE_IN' || activeTab === 'IMPORT' ? Number(formData.importPrice) || 0 : foundDevice?.importPrice || 0;
+        
+        const sourceName = activeTab === 'IMPORT' ? formData.source || "" : 
+                           activeTab === 'SHOP' ? `Nguồn shop chuyển lên - ${formData.source}` :
+                           activeTab === 'TRADE_IN' ? "Nguồn thu cũ" : 
+                           activeTab === 'WARRANTY' ? "Nguồn bảo hành" : "Nguồn khách lẻ";
+
+        const newDevice: Device = {
+          id: `dev-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          imei: item.imei,
+          model: formData.model || "",
+          color: formData.color || "",
+          capacity: formData.capacity || "",
+          source: sourceName,
+          importPrice,
+          importDate: foundDevice?.importDate || format(new Date(), "yyyy-MM-dd HH:mm"),
+          receiverId: state.currentUser!.id,
+          status,
+          notes: formData.notes || "",
+          images: item.images,
+          receptionType,
+          customerInfo: formData.customerInfo,
+          customerPhone: formData.customerPhone,
+          receptionDate: format(new Date(), "yyyy-MM-dd HH:mm"),
+        };
+
+        dispatch({ type: "ADD_DEVICE", payload: newDevice });
+
+        importItems.push({
+          imei: item.imei,
+          model: formData.model || "",
+          color: formData.color || "",
+          capacity: formData.capacity || "",
+          importPrice,
+        });
+        totalAmount += importPrice;
+      });
+
+      if (importItems.length > 0) {
+        const sourceName = activeTab === 'IMPORT' ? formData.source || "Không rõ" : 
+                           activeTab === 'SHOP' ? `Nguồn shop chuyển lên - ${formData.source}` :
+                           activeTab === 'TRADE_IN' ? "Nguồn thu cũ" : 
+                           activeTab === 'WARRANTY' ? "Nguồn bảo hành" : "Nguồn khách lẻ";
+
+        if (isEditing && editingReceiptId) {
+          // Update existing receipt
+          const updatedReceipt = {
+            id: editingReceiptId,
+            supplierName: sourceName,
+            importDate: format(new Date(), "yyyy-MM-dd HH:mm"),
+            totalAmount,
+            notes: formData.notes || "",
+            items: importItems,
+            receiverId: state.currentUser!.id,
+          };
+          dispatch({ type: "UPDATE_IMPORT_RECEIPT", payload: updatedReceipt });
+        } else {
+          // Create new receipt
+          const newImportReceipt = {
+            id: importReceiptId,
+            supplierName: sourceName,
+            importDate: format(new Date(), "yyyy-MM-dd HH:mm"),
+            totalAmount,
+            notes: formData.notes || "",
+            items: importItems,
+            receiverId: state.currentUser!.id,
+          };
+          dispatch({ type: "ADD_IMPORT_RECEIPT", payload: newImportReceipt });
+
+          // Record cash payment in accounting if paid amount > 0
+          if (paidAmount > 0) {
+            dispatch({
+              type: "ADD_TRANSACTION",
+              payload: {
+                id: `TXN-${Date.now()}`,
+                type: 'EXPENSE',
+                amount: paidAmount,
+                category: 'IMPORT',
+                description: `Thanh toán ${paidAmount.toLocaleString()}đ nhập thiết bị nguồn: ${sourceName}`,
+                date: new Date().toISOString(),
+                storeId: state.currentUser?.storeId || 'KHO_TONG',
+                createdBy: state.currentUser?.id || 'unknown',
+                referenceId: importReceiptId
+              }
+            });
+          }
+
+          // Record debt if not fully paid (only for normal IMPORT or TRADE_IN from supplier list)
+          const debtAmount = totalAmount - paidAmount;
+          if (debtAmount > 0 && activeTab === 'IMPORT' && formData.source) {
+            const supplier = state.suppliers.find(s => s.name === formData.source);
+            if (supplier) {
+              const storeId = state.currentUser?.storeId || 'KHO_TONG';
+              dispatch({
+                type: "UPDATE_SUPPLIER",
+                payload: {
+                  ...supplier,
+                  totalDebt: (supplier.totalDebt || 0) + debtAmount,
+                  storeDebts: {
+                    ...supplier.storeDebts,
+                    [storeId]: (supplier.storeDebts?.[storeId] || 0) + debtAmount
+                  }
+                }
+              });
+            }
+          }
+          
+          if(debtAmount > 0 && activeTab === 'TRADE_IN' && formData.customerPhone) {
+              const customer = state.customers.find(c => c.phone === formData.customerPhone);
+              if(customer) {
+                  const storeId = state.currentUser?.storeId || 'KHO_TONG';
+                  // if buying from customer, debt is technically negative, but let's assume we owe the customer money.
+                  // For now, customer doesn't have a concept of "Store owes Customer", only "Customer owes Store" (totalDebt).
+                  // So we might log a negative debt for the customer, or skip it. Let's skip updating customer debt for now to avoid breaking existing models.
+              }
+          }
+        }
+      }
+
+      // Reset form
+      setFormData({ model: "", color: "", capacity: "", source: "", notes: "", customerInfo: "", customerPhone: "", importPrice: 0 });
+      setFoundDevice(null);
+      setSearchImei("");
+      setImeiList([]);
+      setCurrentImei("");
+      setIsEditing(false);
+      setEditingReceiptId(null);
+      setPaidAmount(0);
+      alert(isEditing ? "Cập nhật phiếu nhập thành công!" : "Tiếp nhận thành công!");
+      
+      if (activeTab === 'IMPORT') {
+        navigate('/phieu-nhap-hang');
+      }
+    };
 
   const handleAddImei = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -424,14 +484,31 @@ export default function TiepNhan() {
                 </div>
                 
                 {activeTab === 'TRADE_IN' || activeTab === 'IMPORT' ? (
-                  <div>
-                    <label className="block text-sm font-medium text-dark-muted">Giá Nhập (VNĐ) *</label>
-                    <input
-                      type="number" required
-                      className="mt-1 block w-full dark-input p-2 rounded-md text-neon-green font-bold"
-                      value={formData.importPrice}
-                      onChange={(e) => setFormData({ ...formData, importPrice: Number(e.target.value) })}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-1 md:col-span-2">
+                    <div>
+                      <label className="block text-sm font-medium text-dark-muted">Giá Nhập Của 1 Máy (VNĐ) *</label>
+                      <input
+                        type="number" required
+                        className="mt-1 block w-full dark-input p-2 rounded-md text-neon-green font-bold"
+                        value={formData.importPrice}
+                        onChange={(e) => setFormData({ ...formData, importPrice: Number(e.target.value) })}
+                      />
+                    </div>
+                    {activeTab === 'IMPORT' && (
+                      <div>
+                        <label className="block text-sm font-medium text-dark-muted">Tổng Tiền Đã Thanh Toán (VNĐ)</label>
+                        <input
+                          type="number"
+                          className="mt-1 block w-full dark-input p-2 rounded-md text-neon-pink font-bold"
+                          value={paidAmount}
+                          onChange={(e) => setPaidAmount(Number(e.target.value))}
+                          placeholder={`Tối đa: ${(calculatedTotal).toLocaleString()}đ`}
+                        />
+                        <p className="text-xs text-dark-muted mt-1">
+                          Tổng tiền: {(calculatedTotal).toLocaleString()}đ. Nợ NCC: {Math.max(0, calculatedTotal - paidAmount).toLocaleString()}đ
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : null}
                 

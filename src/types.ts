@@ -213,6 +213,8 @@ export interface Product {
   sellPrice: number;
   notes?: string;
   commission?: number; // Hoa hồng định mức cho dịch vụ này
+  color?: string;
+  capacity?: string;
 }
 
 export interface Part {
