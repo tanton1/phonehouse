@@ -5,12 +5,7 @@ import { ShoppingCart, Search, Plus, Trash2, CreditCard, User, Store, DollarSign
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
-const SHOP_LABELS: Record<string, string> = {
-  XSTORE: 'Xstore',
-  PH_DN: 'PH Đà Nẵng',
-  PH_HUE: 'PH Huế',
-  PH_QNG: 'PH Quảng Ngãi',
-};
+
 
 const QUICK_DISCOUNTS = [50000, 100000, 200000, 500000];
 
@@ -30,7 +25,16 @@ type CartItem = UnifiedCartItem;
 
 export default function BanHang() {
   const { state, dispatch } = useAppContext();
-  const [selectedStore, setSelectedStore] = useState<DeviceLocation>(state.currentUser?.storeId || 'XSTORE');
+  
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    if (branch.code !== 'KHO_TONG') {
+      acc[branch.code] = branch.name;
+    }
+    return acc;
+  }, {} as Record<string, string>);
+  const [mobileTab, setMobileTab] = useState<'PRODUCTS' | 'CART'>('PRODUCTS');
+  const defaultStore = state.storeBranches.find(b => b.code !== 'KHO_TONG' && b.isActive)?.code || '';
+  const [selectedStore, setSelectedStore] = useState<DeviceLocation>(state.currentUser?.storeId || defaultStore);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
@@ -323,18 +327,37 @@ export default function BanHang() {
   };
 
   return (
-    <div className="space-y-6 pb-48 lg:pb-0">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neon-cyan neon-text flex items-center">
-            <ShoppingCart className="w-6 h-6 mr-2" />
-            Bán Hàng (POS)
-          </h1>
-          <p className="text-dark-muted text-sm mt-1">Quản lý bán hàng tại cửa hàng</p>
+    <div className="space-y-4 lg:space-y-6 pb-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-dark-card p-4 rounded-xl border border-dark-border shadow-sm">
+        <div className="flex items-center justify-between w-full lg:w-auto">
+          <div className="flex items-center">
+            <ShoppingCart className="w-6 h-6 mr-2 text-neon-cyan" />
+            <h1 className="text-xl font-bold text-neon-cyan neon-text tracking-tight">POS Bán Hàng</h1>
+          </div>
+          
+          {/* Mobile Tab Toggle */}
+          <div className="flex lg:hidden bg-dark-bg p-1 rounded-lg border border-dark-border">
+            <button
+              onClick={() => setMobileTab('PRODUCTS')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${mobileTab === 'PRODUCTS' ? 'bg-neon-cyan/20 text-neon-cyan' : 'text-dark-muted'}`}
+            >
+              Sản Phẩm
+            </button>
+            <button
+              onClick={() => setMobileTab('CART')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${mobileTab === 'CART' ? 'bg-neon-cyan/20 text-neon-cyan' : 'text-dark-muted'} flex items-center`}
+            >
+              Đơn Hàng
+              {cart.length > 0 && (
+                 <span className="ml-1.5 bg-neon-pink text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">{cart.length}</span>
+              )}
+            </button>
+          </div>
         </div>
         
-        <div className="flex items-center w-full sm:w-auto">
-          <div className="flex items-center bg-dark-card border border-dark-border rounded-lg px-3 py-2 w-full sm:w-auto">
+        <div className="flex items-center w-full lg:w-auto">
+          <div className="flex items-center bg-dark-bg border border-dark-border rounded-lg px-3 py-2 w-full lg:w-auto">
             <Store className="w-4 h-4 text-dark-muted mr-2 shrink-0" />
             <select
               value={selectedStore}
@@ -358,7 +381,7 @@ export default function BanHang() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Product Selection */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className={`lg:col-span-2 space-y-4 ${mobileTab === 'PRODUCTS' ? 'block' : 'hidden lg:block'}`}>
           <div className="bg-dark-card rounded-xl border border-dark-border p-4 shadow-lg">
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-muted" />
@@ -373,7 +396,7 @@ export default function BanHang() {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 gap-4 h-[calc(100vh-280px)] lg:h-[calc(100vh-240px)] overflow-y-auto custom-scrollbar pr-2">
               {availableProducts.length > 0 && searchQuery && (
                 <div className="bg-dark-bg border border-dark-border rounded-lg p-4 mb-4">
                   <h3 className="font-bold text-neon-cyan mb-3 flex items-center border-b border-dark-border pb-2">
@@ -452,12 +475,12 @@ export default function BanHang() {
         </div>
 
         {/* Right: Cart & Checkout */}
-        <div className="space-y-4">
+        <div className={`space-y-4 ${mobileTab === 'CART' ? 'block' : 'hidden lg:block'}`}>
           <div className="bg-dark-card rounded-xl border border-dark-border p-4 shadow-lg flex flex-col h-full">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-dark-text flex items-center">
                 <ShoppingCart className="w-5 h-5 mr-2 text-neon-cyan" />
-                Giỏ Hàng
+                Đơn Hàng
               </h2>
               <span className="bg-neon-cyan/20 text-neon-cyan text-xs font-bold px-2 py-1 rounded-full">
                 {cart.length} SP
@@ -575,8 +598,8 @@ export default function BanHang() {
               )}
             </div>
 
-            {/* Summary - Hidden on mobile, shown in sticky bar instead */}
-            <div className="hidden lg:block space-y-3 mb-6 bg-dark-bg p-4 rounded-lg border border-dark-border">
+            {/* Summary */}
+            <div className="space-y-3 mb-6 bg-dark-bg p-4 rounded-lg border border-dark-border">
               <div className="flex justify-between text-sm">
                 <span className="text-dark-muted">Tổng tiền:</span>
                 <span className="text-dark-text font-medium">{totalAmount.toLocaleString()}đ</span>
@@ -637,7 +660,7 @@ export default function BanHang() {
             </div>
 
             {/* Payment Method */}
-            <div className="hidden lg:block mb-6">
+            <div className="mb-6">
               <label className="block text-xs font-medium text-dark-muted mb-2">Phương thức thanh toán</label>
               <div className="grid grid-cols-4 gap-2">
                 {(['CASH', 'TRANSFER', 'CARD', 'INSTALLMENT'] as const).map(method => (
@@ -650,7 +673,7 @@ export default function BanHang() {
                         : 'bg-dark-bg border-dark-border text-dark-muted hover:border-dark-muted'
                     }`}
                   >
-                    {method === 'CASH' ? 'Tiền mặt' : method === 'TRANSFER' ? 'Chuyển khoản' : method === 'CARD' ? 'Quẹt thẻ' : 'Trả góp'}
+                    {method === 'CASH' ? 'Tiền mặt' : method === 'TRANSFER' ? 'CK' : method === 'CARD' ? 'Quẹt thẻ' : 'Trả góp'}
                   </button>
                 ))}
               </div>
@@ -670,74 +693,11 @@ export default function BanHang() {
             <button
               onClick={handleCheckout}
               disabled={cart.length === 0}
-              className="hidden lg:flex w-full neon-button py-3 items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              className="flex w-full neon-button py-3 items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
               <CreditCard className="w-5 h-5 mr-2" />
               Thanh Toán
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Sticky Bottom Bar for Cart & Checkout */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-dark-card border-t border-dark-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-40">
-        <div className="max-w-md mx-auto">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex flex-col">
-              <span className="text-xs text-dark-muted">Khách cần trả ({cart.length} SP)</span>
-              <span className="text-lg font-bold text-neon-cyan">{finalAmount.toLocaleString()}đ</span>
-            </div>
-            {debtAmount > 0 && (
-              <div className="flex flex-col items-end">
-                <span className="text-xs text-dark-muted">Còn nợ</span>
-                <span className="text-sm font-bold text-red-400">{debtAmount.toLocaleString()}đ</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex gap-2 mb-3">
-            <div className="flex-1 relative flex items-center">
-              <span className="absolute left-3 text-xs text-dark-muted">Khách đưa:</span>
-              <input
-                type="number"
-                value={paidAmountInput}
-                onChange={(e) => setPaidAmountInput(e.target.value)}
-                placeholder={finalAmount.toString()}
-                className="w-full bg-dark-bg border border-dark-border rounded-lg pl-20 pr-3 py-2 text-right text-neon-cyan font-bold outline-none focus:border-neon-cyan text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as any)}
-                className="bg-dark-bg border border-dark-border rounded-lg px-2 py-2 text-dark-text outline-none text-sm w-1/3"
-              >
-                <option value="CASH">Tiền mặt</option>
-                <option value="TRANSFER">CK</option>
-                <option value="CARD">Quẹt thẻ</option>
-                <option value="INSTALLMENT">Trả góp</option>
-              </select>
-              <button
-                onClick={handleCheckout}
-                disabled={cart.length === 0}
-                className="flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center transition-all bg-neon-cyan text-dark-bg hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <CreditCard className="w-4 h-4 mr-1" />
-                Thanh Toán
-              </button>
-            </div>
-            {paymentMethod === 'INSTALLMENT' && (
-              <input
-                type="text"
-                placeholder="Đối tác (VD: Home Credit)"
-                value={installmentPartner}
-                onChange={(e) => setInstallmentPartner(e.target.value)}
-                className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text outline-none focus:border-neon-cyan"
-              />
-            )}
           </div>
         </div>
       </div>

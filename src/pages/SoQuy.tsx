@@ -1,55 +1,67 @@
-import React, { useState, useMemo } from 'react';
-import { useAppContext } from '../store/AppContext';
-import { Transaction, DeviceLocation } from '../types';
-import { DollarSign, Plus, ArrowUpRight, ArrowDownRight, Search, Filter, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
-import toast from 'react-hot-toast';
+import React, { useState, useMemo } from "react";
+import { useAppContext } from "../store/AppContext";
+import { Transaction, DeviceLocation } from "../types";
+import {
+  DollarSign,
+  Plus,
+  ArrowUpRight,
+  ArrowDownRight,
+  Search,
+  Filter,
+  Calendar,
+} from "lucide-react";
+import { format } from "date-fns";
+import toast from "react-hot-toast";
 
-const SHOP_LABELS: Record<string, string> = {
-  KHO_TONG: 'Kho Tổng',
-  XSTORE: 'Xstore',
-  PH_DN: 'PH Đà Nẵng',
-  PH_HUE: 'PH Huế',
-  PH_QNG: 'PH Quảng Ngãi',
-};
+
 
 const CATEGORY_LABELS: Record<string, string> = {
-  SALE: 'Bán hàng',
-  IMPORT: 'Nhập hàng',
-  SALARY: 'Lương',
-  UTILITIES: 'Điện nước/Chi phí',
-  DEBT_COLLECTION: 'Thu nợ khách hàng',
-  OTHER: 'Khác',
+  SALE: "Bán hàng",
+  IMPORT: "Nhập hàng",
+  SALARY: "Lương",
+  UTILITIES: "Điện nước/Chi phí",
+  DEBT_COLLECTION: "Thu nợ khách hàng",
+  OTHER: "Khác",
 };
 
 export default function SoQuy() {
   const { state, dispatch } = useAppContext();
-  const [selectedStore, setSelectedStore] = useState<DeviceLocation | 'KHO_TONG' | 'ALL'>('ALL');
-  const [dateFilter, setDateFilter] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    acc[branch.code] = branch.name;
+    return acc;
+  }, {} as Record<string, string>);
+  const [selectedStore, setSelectedStore] = useState<
+    DeviceLocation | "KHO_TONG" | "ALL"
+  >("ALL");
+  const [dateFilter, setDateFilter] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   const [newTx, setNewTx] = useState<Partial<Transaction>>({
-    type: 'EXPENSE',
+    type: "EXPENSE",
     amount: 0,
-    category: 'OTHER',
-    description: '',
-    storeId: 'KHO_TONG',
-    date: format(new Date(), 'yyyy-MM-dd')
+    category: "OTHER",
+    description: "",
+    storeId: "KHO_TONG",
+    date: format(new Date(), "yyyy-MM-dd"),
   });
 
   const filteredTransactions = useMemo(() => {
-    return state.transactions.filter(tx => {
-      const matchStore = selectedStore === 'ALL' || tx.storeId === selectedStore;
-      const matchDate = !dateFilter || tx.date.startsWith(dateFilter);
-      return matchStore && matchDate;
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return state.transactions
+      .filter((tx) => {
+        const matchStore =
+          selectedStore === "ALL" || tx.storeId === selectedStore;
+        const matchDate = !dateFilter || tx.date.startsWith(dateFilter);
+        return matchStore && matchDate;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [state.transactions, selectedStore, dateFilter]);
 
   const summary = useMemo(() => {
     let income = 0;
     let expense = 0;
-    filteredTransactions.forEach(tx => {
-      if (tx.type === 'INCOME') income += tx.amount;
+    filteredTransactions.forEach((tx) => {
+      if (tx.type === "INCOME") income += tx.amount;
       else expense += tx.amount;
     });
     return { income, expense, balance: income - expense };
@@ -58,35 +70,35 @@ export default function SoQuy() {
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTx.amount || newTx.amount <= 0) {
-      toast.error('Số tiền phải lớn hơn 0');
+      toast.error("Số tiền phải lớn hơn 0");
       return;
     }
     if (!newTx.description) {
-      toast.error('Vui lòng nhập mô tả');
+      toast.error("Vui lòng nhập mô tả");
       return;
     }
 
     const transaction: Transaction = {
       id: `TXN-${Date.now()}`,
-      type: newTx.type as 'INCOME' | 'EXPENSE',
+      type: newTx.type as "INCOME" | "EXPENSE",
       amount: Number(newTx.amount),
       category: newTx.category as any,
       description: newTx.description,
       date: newTx.date || new Date().toISOString(),
       storeId: newTx.storeId as any,
-      createdBy: state.currentUser?.id || 'unknown'
+      createdBy: state.currentUser?.id || "unknown",
     };
 
-    dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
-    toast.success('Đã thêm giao dịch!');
+    dispatch({ type: "ADD_TRANSACTION", payload: transaction });
+    toast.success("Đã thêm giao dịch!");
     setIsAddModalOpen(false);
     setNewTx({
-      type: 'EXPENSE',
+      type: "EXPENSE",
       amount: 0,
-      category: 'OTHER',
-      description: '',
-      storeId: 'KHO_TONG',
-      date: format(new Date(), 'yyyy-MM-dd')
+      category: "OTHER",
+      description: "",
+      storeId: "KHO_TONG",
+      date: format(new Date(), "yyyy-MM-dd"),
     });
   };
 
@@ -98,7 +110,9 @@ export default function SoQuy() {
             <DollarSign className="w-6 h-6 mr-2" />
             Sổ Quỹ
           </h1>
-          <p className="text-dark-muted text-sm mt-1">Quản lý thu chi các cửa hàng</p>
+          <p className="text-dark-muted text-sm mt-1">
+            Quản lý thu chi các cửa hàng
+          </p>
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
@@ -120,7 +134,9 @@ export default function SoQuy() {
           >
             <option value="ALL">Tất cả cửa hàng</option>
             {Object.entries(SHOP_LABELS).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
+              <option key={key} value={key}>
+                {label}
+              </option>
             ))}
           </select>
         </div>
@@ -133,7 +149,12 @@ export default function SoQuy() {
             className="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
           />
           {dateFilter && (
-            <button onClick={() => setDateFilter('')} className="text-xs text-neon-cyan hover:underline">Xóa</button>
+            <button
+              onClick={() => setDateFilter("")}
+              className="text-xs text-neon-cyan hover:underline"
+            >
+              Xóa
+            </button>
           )}
         </div>
       </div>
@@ -143,7 +164,9 @@ export default function SoQuy() {
         <div className="bg-dark-card rounded-xl border border-dark-border p-6 shadow-lg flex items-center justify-between">
           <div>
             <p className="text-sm text-dark-muted mb-1">Tổng Thu</p>
-            <p className="text-2xl font-bold text-green-400">{summary.income.toLocaleString()}đ</p>
+            <p className="text-2xl font-bold text-green-400">
+              {summary.income.toLocaleString()}đ
+            </p>
           </div>
           <div className="p-3 bg-green-400/10 rounded-full">
             <ArrowUpRight className="w-6 h-6 text-green-400" />
@@ -152,7 +175,9 @@ export default function SoQuy() {
         <div className="bg-dark-card rounded-xl border border-dark-border p-6 shadow-lg flex items-center justify-between">
           <div>
             <p className="text-sm text-dark-muted mb-1">Tổng Chi</p>
-            <p className="text-2xl font-bold text-red-400">{summary.expense.toLocaleString()}đ</p>
+            <p className="text-2xl font-bold text-red-400">
+              {summary.expense.toLocaleString()}đ
+            </p>
           </div>
           <div className="p-3 bg-red-400/10 rounded-full">
             <ArrowDownRight className="w-6 h-6 text-red-400" />
@@ -161,7 +186,9 @@ export default function SoQuy() {
         <div className="bg-dark-card rounded-xl border border-dark-border p-6 shadow-lg flex items-center justify-between">
           <div>
             <p className="text-sm text-dark-muted mb-1">Tồn Quỹ</p>
-            <p className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-neon-cyan' : 'text-red-400'}`}>
+            <p
+              className={`text-2xl font-bold ${summary.balance >= 0 ? "text-neon-cyan" : "text-red-400"}`}
+            >
               {summary.balance.toLocaleString()}đ
             </p>
           </div>
@@ -174,15 +201,28 @@ export default function SoQuy() {
       {/* Transactions List */}
       <div className="bg-dark-card rounded-xl border border-dark-border overflow-hidden shadow-2xl">
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse">
+          {/* Desktop Table View */}
+          <table className="w-full text-left border-collapse hidden md:table">
             <thead>
               <tr className="bg-dark-bg/50 text-dark-muted text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium border-b border-dark-border">Ngày</th>
-                <th className="p-4 font-medium border-b border-dark-border">Cửa hàng</th>
-                <th className="p-4 font-medium border-b border-dark-border">Loại</th>
-                <th className="p-4 font-medium border-b border-dark-border">Danh mục</th>
-                <th className="p-4 font-medium border-b border-dark-border">Mô tả</th>
-                <th className="p-4 font-medium border-b border-dark-border text-right">Số tiền</th>
+                <th className="p-4 font-medium border-b border-dark-border">
+                  Ngày
+                </th>
+                <th className="p-4 font-medium border-b border-dark-border">
+                  Cửa hàng
+                </th>
+                <th className="p-4 font-medium border-b border-dark-border">
+                  Loại
+                </th>
+                <th className="p-4 font-medium border-b border-dark-border">
+                  Danh mục
+                </th>
+                <th className="p-4 font-medium border-b border-dark-border">
+                  Mô tả
+                </th>
+                <th className="p-4 font-medium border-b border-dark-border text-right">
+                  Số tiền
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border text-sm">
@@ -194,9 +234,12 @@ export default function SoQuy() {
                 </tr>
               ) : (
                 filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-dark-bg/30 transition-colors">
+                  <tr
+                    key={tx.id}
+                    className="hover:bg-dark-bg/30 transition-colors"
+                  >
                     <td className="p-4 text-dark-text whitespace-nowrap">
-                      {format(new Date(tx.date), 'dd/MM/yyyy HH:mm')}
+                      {format(new Date(tx.date), "dd/MM/yyyy HH:mm")}
                     </td>
                     <td className="p-4 text-dark-text">
                       <span className="px-2 py-1 bg-dark-bg rounded text-xs border border-dark-border">
@@ -204,54 +247,128 @@ export default function SoQuy() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium border ${
-                        tx.type === 'INCOME' 
-                          ? 'bg-green-400/10 text-green-400 border-green-400/20' 
-                          : 'bg-red-400/10 text-red-400 border-red-400/20'
-                      }`}>
-                        {tx.type === 'INCOME' ? 'THU' : 'CHI'}
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium border ${
+                          tx.type === "INCOME"
+                            ? "bg-green-400/10 text-green-400 border-green-400/20"
+                            : "bg-red-400/10 text-red-400 border-red-400/20"
+                        }`}
+                      >
+                        {tx.type === "INCOME" ? "THU" : "CHI"}
                       </span>
                     </td>
                     <td className="p-4 text-dark-muted">
                       {CATEGORY_LABELS[tx.category] || tx.category}
                     </td>
-                    <td className="p-4 text-dark-text max-w-xs truncate" title={tx.description}>
+                    <td
+                      className="p-4 text-dark-text max-w-xs truncate"
+                      title={tx.description}
+                    >
                       {tx.description}
                     </td>
-                    <td className={`p-4 text-right font-bold ${
-                      tx.type === 'INCOME' ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {tx.type === 'INCOME' ? '+' : '-'}{tx.amount.toLocaleString()}đ
+                    <td
+                      className={`p-4 text-right font-bold ${
+                        tx.type === "INCOME" ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {tx.type === "INCOME" ? "+" : "-"}
+                      {tx.amount.toLocaleString()}đ
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+
+          {/* Mobile Card View */}
+          <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-8 text-dark-muted">
+                Không có giao dịch nào
+              </div>
+            ) : (
+              filteredTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="bg-dark-bg border border-dark-border rounded-lg p-4 flex flex-col gap-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`px-2 py-1 rounded text-[10px] font-bold border ${
+                            tx.type === "INCOME"
+                              ? "bg-green-400/10 text-green-400 border-green-400/20"
+                              : "bg-red-400/10 text-red-400 border-red-400/20"
+                          }`}
+                        >
+                          {tx.type === "INCOME" ? "THU" : "CHI"}
+                        </span>
+                        <span className="text-sm font-medium text-dark-text">
+                          {CATEGORY_LABELS[tx.category] || tx.category}
+                        </span>
+                      </div>
+                      <span className="text-xs text-dark-muted">
+                        {format(new Date(tx.date), "dd/MM/yyyy HH:mm")} &bull;{" "}
+                        {SHOP_LABELS[tx.storeId] || tx.storeId}
+                      </span>
+                    </div>
+                    <div
+                      className={`text-right font-bold ${
+                        tx.type === "INCOME" ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {tx.type === "INCOME" ? "+" : "-"}
+                      {tx.amount.toLocaleString()}đ
+                    </div>
+                  </div>
+                  {tx.description && (
+                    <div className="text-sm text-dark-text bg-dark-card p-2 rounded border border-dark-border">
+                      {tx.description}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Mobile Floating Action Button */}
+      <button
+        onClick={() => setIsAddModalOpen(true)}
+        className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-neon-cyan text-dark-bg rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.5)] z-40"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
 
       {/* Add Transaction Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-dark-card border border-dark-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-dark-border flex justify-between items-center bg-dark-bg/50">
-              <h2 className="text-lg font-bold text-neon-cyan">Thêm Giao Dịch</h2>
-              <button 
+              <h2 className="text-lg font-bold text-neon-cyan">
+                Thêm Giao Dịch
+              </h2>
+              <button
                 onClick={() => setIsAddModalOpen(false)}
                 className="text-dark-muted hover:text-dark-text transition-colors"
               >
                 &times;
               </button>
             </div>
-            
+
             <form onSubmit={handleAddTransaction} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-dark-muted mb-1">Loại giao dịch</label>
+                  <label className="block text-xs font-medium text-dark-muted mb-1">
+                    Loại giao dịch
+                  </label>
                   <select
                     value={newTx.type}
-                    onChange={(e) => setNewTx({...newTx, type: e.target.value as any})}
+                    onChange={(e) =>
+                      setNewTx({ ...newTx, type: e.target.value as any })
+                    }
                     className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
                   >
                     <option value="INCOME">Thu</option>
@@ -259,14 +376,20 @@ export default function SoQuy() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-dark-muted mb-1">Cửa hàng</label>
+                  <label className="block text-xs font-medium text-dark-muted mb-1">
+                    Cửa hàng
+                  </label>
                   <select
                     value={newTx.storeId}
-                    onChange={(e) => setNewTx({...newTx, storeId: e.target.value as any})}
+                    onChange={(e) =>
+                      setNewTx({ ...newTx, storeId: e.target.value as any })
+                    }
                     className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
                   >
                     {Object.entries(SHOP_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -274,47 +397,63 @@ export default function SoQuy() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-dark-muted mb-1">Số tiền (VNĐ)</label>
+                  <label className="block text-xs font-medium text-dark-muted mb-1">
+                    Số tiền (VNĐ)
+                  </label>
                   <input
                     type="number"
                     required
                     min="0"
-                    value={newTx.amount || ''}
-                    onChange={(e) => setNewTx({...newTx, amount: Number(e.target.value)})}
+                    value={newTx.amount || ""}
+                    onChange={(e) =>
+                      setNewTx({ ...newTx, amount: Number(e.target.value) })
+                    }
                     className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-dark-muted mb-1">Danh mục</label>
+                  <label className="block text-xs font-medium text-dark-muted mb-1">
+                    Danh mục
+                  </label>
                   <select
                     value={newTx.category}
-                    onChange={(e) => setNewTx({...newTx, category: e.target.value as any})}
+                    onChange={(e) =>
+                      setNewTx({ ...newTx, category: e.target.value as any })
+                    }
                     className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
                   >
                     {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-dark-muted mb-1">Ngày</label>
+                <label className="block text-xs font-medium text-dark-muted mb-1">
+                  Ngày
+                </label>
                 <input
                   type="date"
                   required
-                  value={newTx.date?.split('T')[0]}
-                  onChange={(e) => setNewTx({...newTx, date: e.target.value})}
+                  value={newTx.date?.split("T")[0]}
+                  onChange={(e) => setNewTx({ ...newTx, date: e.target.value })}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-dark-muted mb-1">Mô tả chi tiết</label>
+                <label className="block text-xs font-medium text-dark-muted mb-1">
+                  Mô tả chi tiết
+                </label>
                 <textarea
                   required
                   value={newTx.description}
-                  onChange={(e) => setNewTx({...newTx, description: e.target.value})}
+                  onChange={(e) =>
+                    setNewTx({ ...newTx, description: e.target.value })
+                  }
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text focus:border-neon-cyan outline-none min-h-[80px]"
                   placeholder="Ví dụ: Tiền điện tháng 4, Lương nv A..."
                 />
@@ -328,10 +467,7 @@ export default function SoQuy() {
                 >
                   Hủy
                 </button>
-                <button
-                  type="submit"
-                  className="neon-button px-6 py-2 text-sm"
-                >
+                <button type="submit" className="neon-button px-6 py-2 text-sm">
                   Lưu Giao Dịch
                 </button>
               </div>

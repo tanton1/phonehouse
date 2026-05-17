@@ -59,6 +59,9 @@ export type Action =
   | { type: "DELETE_CUSTOMER_GROUP"; payload: string }
   | { type: "ADD_ATTENDANCE"; payload: import('../types').AttendanceRecord }
   | { type: "UPDATE_ATTENDANCE"; payload: import('../types').AttendanceRecord }
+  | { type: "ADD_STORE_BRANCH"; payload: import('../types').StoreBranch }
+  | { type: "UPDATE_STORE_BRANCH"; payload: import('../types').StoreBranch }
+  | { type: "DELETE_STORE_BRANCH"; payload: string }
   | { type: "SET_FULL_STATE"; payload: Partial<AppState> }
   | {
       type: "UPDATE_PART_STOCK";
@@ -195,6 +198,13 @@ const initialState: AppState = {
   ],
   transactions: [],
   attendanceRecords: [],
+  storeBranches: [
+    { id: '1', name: 'Kho Tổng', code: 'KHO_TONG', isActive: true },
+    { id: '2', name: 'Xstore', code: 'XSTORE', isActive: true },
+    { id: '3', name: 'PH Đà Nẵng', code: 'PH_DN', isActive: true },
+    { id: '4', name: 'PH Huế', code: 'PH_HUE', isActive: true },
+    { id: '5', name: 'PH Quảng Ngãi', code: 'PH_QNG', isActive: true },
+  ],
 };
 
 const appReducer = (state: AppState, action: Action): AppState => {
@@ -420,6 +430,20 @@ const appReducer = (state: AppState, action: Action): AppState => {
           a.id === action.payload.id ? action.payload : a
         ),
       };
+    case "ADD_STORE_BRANCH":
+      return { ...state, storeBranches: [...state.storeBranches, action.payload] };
+    case "UPDATE_STORE_BRANCH":
+      return {
+        ...state,
+        storeBranches: state.storeBranches.map((b) =>
+          b.id === action.payload.id ? action.payload : b
+        ),
+      };
+    case "DELETE_STORE_BRANCH":
+      return {
+        ...state,
+        storeBranches: state.storeBranches.filter(b => b.id !== action.payload),
+      };
     case "SET_FULL_STATE": {
       const newState = { ...state, ...action.payload };
       if (action.payload.users && state.currentUser) {
@@ -458,6 +482,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           for (const p of MOCK_PARTS) await setDoc(doc(db, 'parts', p.id), p);
           for (const s of MOCK_SUPPLIERS) await setDoc(doc(db, 'suppliers', s.id), s);
           for (const pr of MOCK_PRODUCTS) await setDoc(doc(db, 'products', pr.id), pr);
+          
+          for (const sb of initialState.storeBranches) {
+            await setDoc(doc(db, 'storeBranches', sb.id), sb);
+          }
         }
       } catch (error) {
         console.error("Error initializing mock data:", error);
@@ -495,6 +523,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       { key: 'customerGroups', name: 'customerGroups' },
       { key: 'transactions', name: 'transactions' },
       { key: 'attendanceRecords', name: 'attendanceRecords' },
+      { key: 'storeBranches', name: 'storeBranches' },
     ];
 
     const unsubscribes = collections.map(({ key, name }) => {
@@ -604,6 +633,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         case 'ADD_ATTENDANCE':
         case 'UPDATE_ATTENDANCE':
           await setDoc(doc(db, 'attendanceRecords', action.payload.id), action.payload);
+          break;
+        case 'ADD_STORE_BRANCH':
+        case 'UPDATE_STORE_BRANCH':
+          await setDoc(doc(db, 'storeBranches', action.payload.id), action.payload);
+          break;
+        case 'DELETE_STORE_BRANCH':
+          await deleteDoc(doc(db, 'storeBranches', action.payload));
           break;
         case 'UPDATE_PART_STOCK': {
           const part = stateRef.current.parts.find(p => p.id === action.payload.partId);

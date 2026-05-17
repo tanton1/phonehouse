@@ -40,7 +40,7 @@ export default function TestDauVao() {
   useEffect(() => {
     if (selectedHistoryDevice) {
       const updatedDevice = state.devices.find(d => d.id === selectedHistoryDevice.id);
-      if (updatedDevice) {
+      if (updatedDevice && updatedDevice !== selectedHistoryDevice) {
         setSelectedHistoryDevice(updatedDevice);
       }
     }

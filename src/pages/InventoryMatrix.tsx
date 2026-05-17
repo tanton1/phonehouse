@@ -12,18 +12,15 @@ const APPEARANCE_LABELS: Record<string, string> = {
   'OTHER': 'Chưa phân loại'
 };
 
-const SHOP_LABELS: Record<string, string> = {
-  KHO_TONG: 'Kho Tổng',
-  XSTORE: 'Xstore',
-  PH_DN: 'PH Đà Nẵng',
-  PH_HUE: 'PH Huế',
-  PH_QNG: 'PH Quảng Ngãi',
-};
-
 export default function InventoryMatrix() {
   const { state } = useAppContext();
   const navigate = useNavigate();
   
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    acc[branch.code] = branch.name;
+    return acc;
+  }, {} as Record<string, string>);
+
   // Default store restricted to user's assigned store if they are SALE
   const [selectedStore, setSelectedStore] = useState<DeviceLocation | 'KHO_TONG'>(state.currentUser?.storeId || 'KHO_TONG');
 

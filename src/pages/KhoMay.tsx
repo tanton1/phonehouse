@@ -43,14 +43,10 @@ export default function KhoMay() {
 
   const uniqueModels: string[] = Array.from(new Set(state.products.map(p => p.model))).filter((m): m is string => !!m).sort();
 
-  const SHOP_LABELS: Record<string, string> = {
-    KHO_TONG: 'Kho Tổng',
-    XSTORE: 'Xstore',
-    PH_DN: 'PH Đà Nẵng',
-    PH_HUE: 'PH Huế',
-    PH_QNG: 'PH Quảng Ngãi',
-    DA_BAN: 'Đã Bán',
-  };
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    acc[branch.code] = branch.name;
+    return acc;
+  }, { DA_BAN: "Đã Bán" } as Record<string, string>);
 
   const getDeviceLocation = (device: Device) => {
     // Prioritize active task (Technician)

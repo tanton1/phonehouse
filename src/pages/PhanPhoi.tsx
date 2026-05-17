@@ -5,21 +5,20 @@ import { Device, DeviceLocation } from '../types';
 import { Store, Truck, ShoppingCart, Search, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
-const SHOP_LABELS: Record<string, string> = {
-  KHO_TONG: 'Kho Tổng',
-  XSTORE: 'Xstore',
-  PH_DN: 'PH Đà Nẵng',
-  PH_HUE: 'PH Huế',
-  PH_QNG: 'PH Quảng Ngãi',
-  DA_BAN: 'Đã Bán',
-};
+
 
 export default function PhanPhoi() {
   const { state, dispatch } = useAppContext();
+  
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    acc[branch.code] = branch.name;
+    return acc;
+  }, { DA_BAN: "Đã Bán" } as Record<string, string>);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'KHO_TONG' | 'SHOPS' | 'SERVICE_RETURN' | 'WARRANTY_RETURN' | 'HISTORY'>('KHO_TONG');
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [transferShop, setTransferShop] = useState<DeviceLocation>('XSTORE');
+  const defaultShop = state.storeBranches.find(b => b.code !== 'KHO_TONG' && b.isActive)?.code || '';
+  const [transferShop, setTransferShop] = useState<DeviceLocation>(defaultShop);
   const [sellPrice, setSellPrice] = useState(0);
   const [customerInfo, setCustomerInfo] = useState('');
   const [actionType, setActionType] = useState<'TRANSFER' | 'SELL' | 'SERVICE_RETURN' | 'WARRANTY_RETURN'>('TRANSFER');
@@ -348,10 +347,9 @@ export default function PhanPhoi() {
                         value={transferShop}
                         onChange={e => setTransferShop(e.target.value as DeviceLocation)}
                       >
-                        <option value="XSTORE">Xstore</option>
-                        <option value="PH_DN">PH Đà Nẵng</option>
-                        <option value="PH_HUE">PH Huế</option>
-                        <option value="PH_QNG">PH Quảng Ngãi</option>
+                        {state.storeBranches.filter(b => b.code !== 'KHO_TONG' && b.isActive).map(shop => (
+                          <option key={shop.code} value={shop.code}>{shop.name}</option>
+                        ))}
                       </select>
                     </div>
                     <button 

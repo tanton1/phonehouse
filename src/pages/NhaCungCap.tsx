@@ -4,16 +4,15 @@ import { Supplier, Transaction, DeviceLocation } from '../types';
 import { Truck, Search, DollarSign, Plus, X, Phone, MapPin, Check, Store } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const SHOP_LABELS: Record<string, string> = {
-  KHO_TONG: 'Kho Tổng',
-  XSTORE: 'Xstore',
-  PH_DN: 'PH Đà Nẵng',
-  PH_HUE: 'PH Huế',
-  PH_QNG: 'PH Quảng Ngãi',
-};
+
 
 export default function NhaCungCap() {
   const { state, dispatch } = useAppContext();
+  
+  const SHOP_LABELS = state.storeBranches.reduce((acc, branch) => {
+    acc[branch.code] = branch.name;
+    return acc;
+  }, {} as Record<string, string>);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [selectedStore, setSelectedStore] = useState<string>(

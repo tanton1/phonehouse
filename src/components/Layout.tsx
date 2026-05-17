@@ -139,6 +139,13 @@ const NAV_GROUPS = [
         permissions: ["MANAGE_SALES"],
       },
       {
+        path: "/lich-su-don-hang",
+        label: "Lịch Sử Bán Hàng",
+        icon: FileText,
+        roles: ["ADMIN", "SALE"],
+        permissions: ["MANAGE_SALES"],
+      },
+      {
         path: "/khach-hang",
         label: "Khách Hàng & Công Nợ",
         icon: Users,
@@ -203,7 +210,16 @@ const NAV_GROUPS = [
         path: "/cham-cong",
         label: "Check-in & Chấm Công",
         icon: Clock,
-        roles: ["ADMIN", "KHO_MAY", "TESTER", "TRUONG_KT", "KY_THUAT", "KHO_LINH_KIEN", "QC", "SALE"],
+        roles: [
+          "ADMIN",
+          "KHO_MAY",
+          "TESTER",
+          "TRUONG_KT",
+          "KY_THUAT",
+          "KHO_LINH_KIEN",
+          "QC",
+          "SALE",
+        ],
       },
       {
         path: "/nhan-vien",
@@ -211,6 +227,13 @@ const NAV_GROUPS = [
         icon: Users,
         roles: ["ADMIN"],
         permissions: ["MANAGE_USERS"],
+      },
+      {
+        path: "/cai-dat",
+        label: "Cài Đặt",
+        icon: Settings, // Make sure Settings is imported from lucide-react
+        roles: ["ADMIN"],
+        permissions: [],
       },
       {
         path: "/huong-dan",
@@ -271,16 +294,18 @@ export default function Layout() {
       dispatch({ type: "SET_USER", payload: user });
       localStorage.setItem("phonehouse_user", JSON.stringify(user));
       toast.success(`Đã chuyển sang tài khoản: ${user.name}`);
-      
+
       // Determine the first accessible route for the new user
-      let newPath = '/huong-dan';
+      let newPath = "/huong-dan";
       for (const group of NAV_GROUPS) {
-        const visibleItem = group.items.find(item => {
-          if (user.role === 'ADMIN') return true;
+        const visibleItem = group.items.find((item) => {
+          if (user.role === "ADMIN") return true;
           let hasPerm = false;
           if (item.permissions && item.permissions.length > 0) {
             const userPermissions = user.permissions || [];
-            hasPerm = item.permissions.some(p => userPermissions.includes(p as any));
+            hasPerm = item.permissions.some((p) =>
+              userPermissions.includes(p as any),
+            );
           }
           return hasPerm || item.roles.includes(user.role);
         });
@@ -546,35 +571,60 @@ export default function Layout() {
         </main>
 
         {/* Bottom Navigation (Fixed) */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-dark-card border-t border-dark-border lg:hidden flex justify-around p-2">
+        <nav className="fixed bottom-0 left-0 w-full z-40 bg-dark-card border-t border-dark-border lg:hidden flex justify-around p-2 shadow-[0_-5px_20px_rgba(0,0,0,0.5)] pb-safe">
           {[
-            { path: "/", label: "Dashboard", icon: LayoutDashboard },
             {
-              path: "/phieu-nhap-hang",
-              label: "Nhập Hàng",
-              icon: ClipboardCheck,
+              path: "/",
+              label: "Home",
+              icon: LayoutDashboard,
+              roles: ["ADMIN", "KHO_MAY", "KY_THUAT", "SALE", "QUAN_LY"],
             },
-            { path: "/dieu-phoi", label: "Điều Phối", icon: Settings },
-            { path: "/bao-cao-ton-kho", label: "Tồn Kho", icon: Table },
-          ].map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex flex-col items-center p-2 text-[10px] font-medium rounded-lg transition-colors",
-                  isActive
-                    ? "text-neon-cyan"
-                    : "text-dark-muted hover:text-dark-text",
-                )}
-              >
-                <Icon className="h-5 w-5 mb-1" />
-                {item.label}
-              </Link>
-            );
-          })}
+            {
+              path: "/ban-hang",
+              label: "POS",
+              icon: ShoppingCart,
+              roles: ["ADMIN", "SALE", "QUAN_LY"],
+            },
+            {
+              path: "/tiep-nhan",
+              label: "Tiếp Nhận",
+              icon: Box,
+              roles: ["ADMIN", "KY_THUAT", "QUAN_LY"],
+            },
+          ]
+            .filter(
+              (item) =>
+                item.roles.includes(state.currentUser?.role || "") ||
+                item.roles.includes("ALL"),
+            )
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex flex-col items-center p-2 text-[10px] font-medium rounded-lg transition-colors w-1/4",
+                    isActive
+                      ? "text-neon-cyan"
+                      : "text-dark-muted hover:text-dark-text",
+                  )}
+                >
+                  <Icon className="h-5 w-5 mb-1" />
+                  <span className="truncate w-full text-center">
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex flex-col items-center p-2 text-[10px] font-medium rounded-lg transition-colors w-1/4 text-dark-muted hover:text-dark-text"
+          >
+            <Menu className="h-5 w-5 mb-1" />
+            <span className="truncate w-full text-center">Menu</span>
+          </button>
         </nav>
       </div>
       {/* Change Password Modal */}

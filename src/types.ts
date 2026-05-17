@@ -1,3 +1,11 @@
+export interface StoreBranch {
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  isActive: boolean;
+}
+
 export type Role =
   | "KHO_MAY"
   | "TESTER"
@@ -8,7 +16,7 @@ export type Role =
   | "ADMIN"
   | "SALE";
 
-export type DeviceLocation = 'KHO_TONG' | 'XSTORE' | 'PH_DN' | 'PH_HUE' | 'PH_QNG' | 'DA_BAN';
+export type DeviceLocation = string;
 
 export type DeviceStatus =
   | "MOI_NHAP"
@@ -313,4 +321,5 @@ export interface AppState {
   customerGroups: CustomerGroupDef[];
   transactions: Transaction[];
   attendanceRecords: AttendanceRecord[];
+  storeBranches: StoreBranch[];
 }

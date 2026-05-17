@@ -4,16 +4,14 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 import QRCode from 'react-qr-code';
 import { Clock, CheckCircle, Calendar, Shield, Info, MapPin } from 'lucide-react';
 
-const STORE_LOCATIONS = [
-  { id: 'KHO_TONG', name: 'Kho Tổng', code: 'KHO_TONG_QR' },
-  { id: 'XSTORE', name: 'Xstore', code: 'XSTORE_QR' },
-  { id: 'PH_DN', name: 'PhoneHouse Đà Nẵng', code: 'PH_DN_QR' },
-  { id: 'PH_HUE', name: 'PhoneHouse Huế', code: 'PH_HUE_QR' },
-  { id: 'PH_QNG', name: 'PhoneHouse Quảng Ngãi', code: 'PH_QNG_QR' },
-];
-
 export default function ChamCong() {
   const { state, dispatch } = useAppContext();
+  
+  const STORE_LOCATIONS = state.storeBranches.map(b => ({
+    id: b.code,
+    name: b.name,
+    code: `${b.code}_QR`
+  }));
   const [activeTab, setActiveTab] = useState<'CHECK_IN' | 'OVERVIEW' | 'QR_CODE'>('CHECK_IN');
   const [scanResult, setScanResult] = useState<string | null>(null);
 
